@@ -6,6 +6,8 @@ from numpy.linalg import norm
 from pathlib import Path
 import requests
 import json
+from itertools import compress
+
 
 
 
@@ -34,30 +36,32 @@ class GameClient:
     def ping_game(self, game_id):
 
         if game_id not in self.game_list:
-            df = self.tidy(self, game_id, -1)
+            df = self.tidy(game_id, -1)
             self.game_list[game_id] = df
             return df
         else:
             df_main = self.game_list.get(game_id)
             event_idx_last = df_main.iloc[-1, df_main.columns.get_loc('event_idx')]
-            df = self.tidy(self, game_id, event_idx_last)
+            #print(event_idx_last)
+            df = self.tidy(game_id, event_idx_last)
             self.game_list[game_id].append(df)
             return self.game_list[game_id]
         
 
-    def tidy(self, game_id, event_idx) -> pd.DataFrame:
-
+    def tidy(self, game_id, event_idex) -> pd.DataFrame:
 
         path_file = self.get_games_data(game_id)
         with open(path_file, 'r') as f:
             df = json.load(f)
-        
+                
         event_idx, period_time, period, game_id, team_away_name, team_home_name, is_goal, coordinate_x, coordinate_y, shot_type,\
         strength, shooter_name, goalie_name, empty_net, team_name, event_type, last_type, last_coord_x, last_coord_y, last_period,\
         last_period_time, rebound, number_friendly, number_opposing, power_play= ([] for i in range(25))
         
         allplays_data = df["liveData"]["plays"]["allPlays"]
-        allplays_data = allplays_data[allplays_data['about']['eventIdx']> event_idx]
+        x =[int(allplays_data[i]['about']['eventIdx'])> int(event_idex) for i in range(len(allplays_data))]
+        allplays_data = list(compress(allplays_data, x))
+        #allplays_data = allplays_data[int(allplays_data['about']['eventIdx'])> int(event_idex)]
 
         p = {
             "home_minor_2": [],
@@ -122,7 +126,7 @@ class GameClient:
                 event_type.append(allplays_data[j]["result"]["eventTypeId"])
                 period.append(allplays_data[j]["about"]["period"])
                 period_time.append(allplays_data[j]["about"]["periodTime"])
-                game_id.append(df.name)
+                game_id.append(game_id)
                 event_idx.append(allplays_data[j]["about"]["eventIdx"])
                 team_away_name.append(
                     df["gameData"]["teams"]["away"]["name"]
