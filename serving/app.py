@@ -135,35 +135,39 @@ def predict():
 
     Returns predictions
     """
+
+
+
     # Get POST json data
     json = request.get_json()
     app.logger.info(json)
     feature = []
 
     # TODO:
-    df= pd.json_normalize(json)
+    df= pd.DataFrame(json)
     #raise NotImplementedError("TODO: implement this enpdoint")
     #df = pd.DataFrame([pd.read_json(json, typ='series')])
-    df["shot_type"] = LabelEncoder().fit_transform(df["shot_type"])
-    df["last_type"] = LabelEncoder().fit_transform(df["last_type"])
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    # df["shot_type"] = LabelEncoder().fit_transform(df["shot_type"])
+    # df["last_type"] = LabelEncoder().fit_transform(df["last_type"])
 
 
     try:
         if model_name == 'model_5_2.pickle':
             feature = ['period', 'coordinate_x', 'coordinate_y', 'shot_type', 'distance', 'angle', 'last_type', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance', 'rebound',
-            'change_angle', 'speed','power_play', 'number_friendly', 'number_opposing']
-        
+                'change_angle', 'speed','power_play', 'number_friendly', 'number_opposing']
+    
         elif model_name == 'model_5_3.pickle':
             feature = ['coordinate_x', 'coordinate_y', 'distance', 'angle', 'last_coord_x',
         'last_coord_y', 'time_from_last', 'from_last_distance']
     except:
         app.logger.info(f"The feature not defined for model:{model_name}")
 
-    
-
+    df = df[feature]
+    df = df.dropna().reset_index(drop=True)
+    df = np.array(df[feature])
+    print(df)
     try:
-        response = model.predict_proba(df[feature])[:,1]
+        response = model.predict_proba(df)[:,1]
         app.logger.info(f"The goal probability based on model: {model_name}, is {response}")
     
     except:
