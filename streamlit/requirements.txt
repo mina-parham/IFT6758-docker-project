@@ -1,0 +1,11 @@
+setuptools
+streamlit
+requests
+matplotlib
+pandas
+seaborn
+numpy
+comet_ml
+json
+os
+datetime
