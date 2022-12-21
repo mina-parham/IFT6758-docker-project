@@ -8,9 +8,9 @@ services:
       dockerfile: ./Dockerfile.serving
 #      args:
 #        ARG: <ARG>
-    image: ift6758/serving:serving:0.0.1
+    image: ift6758/serving:flask_app
     ports:
-      - "8890:8890"
+      - "5000:5000"
     environment:
       COMET_API_KEY: ${COMET_API_KEY}
       DOCKER_ENV_VAR = ${LOCAL_ENV_VAR}

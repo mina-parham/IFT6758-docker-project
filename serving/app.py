@@ -165,7 +165,6 @@ def predict():
     df = df[feature]
     df = df.dropna().reset_index(drop=True)
     df = np.array(df[feature])
-    print(df)
     try:
         response = model.predict_proba(df)[:,1]
         app.logger.info(f"The goal probability based on model: {model_name}, is {response}")
@@ -174,6 +173,5 @@ def predict():
         response = None
         app.logger.warning(f"it's not possible to compute goal probability for model: {model_name}")
 
-    print(response)
     app.logger.info(response)
     return jsonify(response.tolist())  # response must be json serializable!
