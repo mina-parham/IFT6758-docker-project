@@ -1,11 +1,9 @@
-setuptools
 streamlit
 requests
 matplotlib
-pandas
-seaborn
-numpy
-comet_ml
-json
+pandas==1.5.0
+seaborn==0.12.0
+numpy==1.23.3
+comet_ml==3.31.17
+json==0.9.5
 os
-datetime

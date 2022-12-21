@@ -1,11 +1,15 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from comet_ml import API
 import json
 import os
 import requests
-import datetime
+import sys
+
+sys.path.insert(0, '/home/nexus10/Documents/UoMontreal_2022/IFT6758 Data Science/IFT6758-docker-project/ift6758/ift6758/client')
+
+from serving_client import ServingClient
+from game_client import GameClient
 
 st.title('Hockey Visualization App')
 
@@ -18,13 +22,15 @@ with st.sidebar:
 
     version = st.text_input('Version', '1.0.0')
     st.write('The selected version is:', version)
-
+    
+    sc= ServingClient()
     if st.button('Get Model'):
         #st.write('Retrieve Model')
-
-        api = API()
-        modelUsed = api.download_registry_model(workspace, model, version,output_path="./trained_models", expand=True)
-
+        if model == 'xgb-model-5-2-pickle':
+            sc.download_registry_model(workspace=workspace, model=model, version=version, model_name='model_5_2.pickle')
+        elif model == 'xgb-model-5-3-pickle':
+            sc.download_registry_model(workspace=workspace, model=model, version=version, model_name='model_5_3.pickle')
+            
 with st.container():
     gameID = st.text_input('Game ID', '2021020329')
 
@@ -45,16 +51,6 @@ with st.container():
                     game_content = json.loads(game_response.content)
                 return game_content
 
-            def current_datetime():
-                date = datetime.datetime.utcnow()
-                year = date.year
-                month = date.month
-                day = date.day
-                hour = date.hour
-                minute = date.minute
-                second = date.second
-                f_date = str(year)+str(month).zfill(2)+str(day).zfill(2)+"_"+str(hour).zfill(2)+str(minute).zfill(2)+str(second).zfill(2)
-                return f_date
 
             def update_event():
                 st.session_state.last_event = ((len(gameData['liveData']['plays']['allPlays'])-1))
@@ -72,16 +68,42 @@ with st.container():
                 gameData = dataHelper(url)
                 liveData = gameData['liveData']['plays']['allPlays'][st.session_state.last_event:]
                 st.session_state.last_event = update_event()
-
-
+                
+            gc = GameClient()
             team1 = gameData['gameData']['teams']['home']['name']
             team2 = gameData['gameData']['teams']['away']['name']
+            st.write(team1)
+            if model == 'xgb-model-5-2-pickle':
+                feature = ['period', 'coordinate_x', 'coordinate_y', 'shot_type', 'distance', 'angle', 'last_type', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance', 'rebound','change_angle', 'speed','power_play', 'number_friendly', 'number_opposing']
+                f_display = ['event_idx','team_name','period', 'coordinate_x', 'coordinate_y', 'shot_type', 'distance', 'angle', 'last_type', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance', 'rebound','change_angle', 'speed','power_play', 'number_friendly', 'number_opposing']
+                df = gc.ping_game(gameID)
+                df_prediction = df[feature]
+                df_display = df[f_display]
+                predictions = sc.predict(df_prediction)
+                df_display['xG_Predicted'] = predictions
+                home_xG_s = df_display.loc[df_display['team_name'] == team1]
+                home_xg = np.round((home_xG_s['xG_Predicted'].sum()),2) 
+                away_xG_s = df_display.loc[df_display['team_name'] == team2]
+                away_xg = np.round((away_xG_s['xG_Predicted'].sum()),2) 
+            elif model == 'xgb-model-5-3-pickle':
+                df = gc.ping_game(gameID)
+                df_prediction = df[feature]
+                df_display = df[f_display]
+                predictions = sc.predict(df_prediction)
+                df_display['xG_Predicted'] = predictions
+                home_xG_s = df_display.loc[df_display['team_name'] == team1]
+                home_xg = np.round((home_xG_s['xG_Predicted'].sum()),2) 
+                away_xG_s = df_display.loc[df_display['team_name'] == team2]
+                away_xg = np.round((away_xG_s['xG_Predicted'].sum()),2) 
+
+
+            
             period = str(gameData['liveData']['plays']['allPlays'][-1]['about']['period'])
             timeLeftP = str(gameData['liveData']['plays']['allPlays'][-1]['about']['periodTimeRemaining'])
             tm1Score = liveData[-1]['about']['goals']['home']
             tm2Score = liveData[-1]['about']['goals']['away']
-            tm1XG = 3.2
-            tm2XG = 1.4
+            tm1XG = home_xg
+            tm2XG = away_xg
 
             st.header('Game '+gameID+" : "+team1+" vs "+team2)
             st.write('Period '+period+" - "+timeLeftP+" left" )
@@ -94,11 +116,4 @@ with st.container():
 
         with st.container():
             st.header('Data used for predictions (and predictions)')
-
-            df = pd.DataFrame()
-
-            df['Name'] = ['Ankit', 'Ankita', 'Yashvardhan']
-            df['Articles'] = [97, 600, 200]
-            df['Improved'] = [2200, 75, 100]
-
-            st.dataframe(df)
+            st.dataframe(df_display)
