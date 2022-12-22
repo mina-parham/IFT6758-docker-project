@@ -1,4 +1,5 @@
 import streamlit as st
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import json
@@ -72,11 +73,13 @@ with st.container():
             gc = GameClient()
             team1 = gameData['gameData']['teams']['home']['name']
             team2 = gameData['gameData']['teams']['away']['name']
-            st.write(team1)
+   
+
             if model == 'xgb-model-5-2-pickle':
                 feature = ['period', 'coordinate_x', 'coordinate_y', 'shot_type', 'distance', 'angle', 'last_type', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance', 'rebound','change_angle', 'speed','power_play', 'number_friendly', 'number_opposing']
                 f_display = ['event_idx','team_name','period', 'coordinate_x', 'coordinate_y', 'shot_type', 'distance', 'angle', 'last_type', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance', 'rebound','change_angle', 'speed','power_play', 'number_friendly', 'number_opposing']
                 df = gc.ping_game(gameID)
+                df = df.dropna()
                 df_prediction = df[feature]
                 df_display = df[f_display]
                 predictions = sc.predict(df_prediction)
@@ -86,7 +89,10 @@ with st.container():
                 away_xG_s = df_display.loc[df_display['team_name'] == team2]
                 away_xg = np.round((away_xG_s['xG_Predicted'].sum()),2) 
             elif model == 'xgb-model-5-3-pickle':
+                feature = ['coordinate_x', 'coordinate_y','distance', 'angle', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance']
+                f_display = ['event_idx','team_name','coordinate_x', 'coordinate_y','distance', 'angle', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance']
                 df = gc.ping_game(gameID)
+                df = df.dropna()
                 df_prediction = df[feature]
                 df_display = df[f_display]
                 predictions = sc.predict(df_prediction)
@@ -117,3 +123,28 @@ with st.container():
         with st.container():
             st.header('Data used for predictions (and predictions)')
             st.dataframe(df_display)
+
+            
+        with st.container():
+            st.header('Additional Visualizations')
+            
+            fig1 = plt.figure(figsize=(6,6))
+            plt.bar(df['shot_type'],df['count'], label="Shot Count", color='b')
+            plt.xlabel("Shot Type")
+            plt.ylabel("Count of Shot")
+            plt.title("Shot Type summary")
+            plt.legend()
+            st.pyplot(fig1)
+            
+            df_true = df.loc[df['is_goal'] == 1]
+            df_false = df.loc[df['is_goal'] == 0]
+            
+            fig2 = plt.figure(figsize=(6,6))
+            merge_df = pd.merge(df_true, df_false, on='shot_type')
+            merge_df = merge_df.rename(columns={'is_goal_x': 'is_goal_True', 'count_x':'count_goal', 'is_goal_y': 'is_goal_False','count_y':'count_nongoal'}) 
+            merge_df.plot(x="shot_type", kind="bar", stacked=True)
+            plt.xlabel("Shot Type")
+            plt.ylabel("Count of Shot")
+            plt.title("Shot Type Summary: Season 2019-2020")
+            plt.legend()
+            st.pyplot(fig2)
