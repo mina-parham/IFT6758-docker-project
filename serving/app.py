@@ -24,12 +24,12 @@ import ift6758
 
 
 
-API_KEY = os.environ.get("COMET_API_KEY")
+#API_KEY = os.environ.get("COMET_API_KEY")
 
 
 app = Flask(__name__)
 LOG_FILE = os.environ.get("FLASK_LOG", "flask.log")
-#API_KEY = 'c2REbE8eQaoRTP059ajV8VYn9'
+API_KEY = 'c2REbE8eQaoRTP059ajV8VYn9'
 global model_name
 global model 
 

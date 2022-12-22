@@ -7,10 +7,13 @@ import os
 import requests
 import sys
 
-sys.path.insert(0, '/home/nexus10/Documents/UoMontreal_2022/IFT6758 Data Science/IFT6758-docker-project/ift6758/ift6758/client')
+from ift6758.ift6758.client.serving.serving_client import ServingClient
+from ift6758.ift6758.client.game.game_client import GameClient
 
-from serving_client import ServingClient
-from game_client import GameClient
+#if 'game_client' not in st.session_state:
+   # st.session_state.game_client = GameClient()
+if 'serving_client' not in st.session_state:
+    st.session_state.serving_client = ServingClient()
 
 st.title('Hockey Visualization App')
 
@@ -28,9 +31,9 @@ with st.sidebar:
     if st.button('Get Model'):
         #st.write('Retrieve Model')
         if model == 'xgb-model-5-2-pickle':
-            sc.download_registry_model(workspace=workspace, model=model, version=version, model_name='model_5_2.pickle')
+            st.session_state.serving_client.download_registry_model(workspace=workspace, model=model, version=version, model_name='model_5_2.pickle')
         elif model == 'xgb-model-5-3-pickle':
-            sc.download_registry_model(workspace=workspace, model=model, version=version, model_name='model_5_3.pickle')
+            st.session_state.serving_client.download_registry_model(workspace=workspace, model=model, version=version, model_name='model_5_3.pickle')
             
 with st.container():
     gameID = st.text_input('Game ID', '2021020329')
@@ -82,12 +85,12 @@ with st.container():
                 df = df.dropna()
                 df_prediction = df[feature]
                 df_display = df[f_display]
-                predictions = sc.predict(df_prediction)
+                predictions = st.session_state.serving_client.predict(df_prediction)
                 df_display['xG_Predicted'] = predictions
                 home_xG_s = df_display.loc[df_display['team_name'] == team1]
-                home_xg = np.round((home_xG_s['xG_Predicted'].sum()),2) 
+                home_xg = float(np.round((home_xG_s['xG_Predicted'].sum()),2)) 
                 away_xG_s = df_display.loc[df_display['team_name'] == team2]
-                away_xg = np.round((away_xG_s['xG_Predicted'].sum()),2) 
+                away_xg = float(np.round((away_xG_s['xG_Predicted'].sum()),2)) 
             elif model == 'xgb-model-5-3-pickle':
                 feature = ['coordinate_x', 'coordinate_y','distance', 'angle', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance']
                 f_display = ['event_idx','team_name','coordinate_x', 'coordinate_y','distance', 'angle', 'last_coord_x', 'last_coord_y', 'time_from_last', 'from_last_distance']
@@ -95,12 +98,12 @@ with st.container():
                 df = df.dropna()
                 df_prediction = df[feature]
                 df_display = df[f_display]
-                predictions = sc.predict(df_prediction)
+                predictions = st.session_state.serving_client.predict(df_prediction)
                 df_display['xG_Predicted'] = predictions
                 home_xG_s = df_display.loc[df_display['team_name'] == team1]
-                home_xg = np.round((home_xG_s['xG_Predicted'].sum()),2) 
+                home_xg = float(np.round((home_xG_s['xG_Predicted'].sum()),2)) 
                 away_xG_s = df_display.loc[df_display['team_name'] == team2]
-                away_xg = np.round((away_xG_s['xG_Predicted'].sum()),2) 
+                away_xg = float(np.round((away_xG_s['xG_Predicted'].sum()),2)) 
 
 
             
@@ -123,28 +126,5 @@ with st.container():
         with st.container():
             st.header('Data used for predictions (and predictions)')
             st.dataframe(df_display)
+            
 
-            
-        with st.container():
-            st.header('Additional Visualizations')
-            
-            fig1 = plt.figure(figsize=(6,6))
-            plt.bar(df['shot_type'],df['count'], label="Shot Count", color='b')
-            plt.xlabel("Shot Type")
-            plt.ylabel("Count of Shot")
-            plt.title("Shot Type summary")
-            plt.legend()
-            st.pyplot(fig1)
-            
-            df_true = df.loc[df['is_goal'] == 1]
-            df_false = df.loc[df['is_goal'] == 0]
-            
-            fig2 = plt.figure(figsize=(6,6))
-            merge_df = pd.merge(df_true, df_false, on='shot_type')
-            merge_df = merge_df.rename(columns={'is_goal_x': 'is_goal_True', 'count_x':'count_goal', 'is_goal_y': 'is_goal_False','count_y':'count_nongoal'}) 
-            merge_df.plot(x="shot_type", kind="bar", stacked=True)
-            plt.xlabel("Shot Type")
-            plt.ylabel("Count of Shot")
-            plt.title("Shot Type Summary: Season 2019-2020")
-            plt.legend()
-            st.pyplot(fig2)

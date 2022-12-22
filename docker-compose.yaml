@@ -9,10 +9,10 @@ services:
 #      args:
 #        ARG: <ARG>
     image: ift6758/serving:flask_app
-    ports:
-      - "5000:5000"
     environment:
       COMET_API_KEY: ${COMET_API_KEY}
+    ports:
+      - 5000:5000
       #DOCKER_ENV_VAR = ${LOCAL_ENV_VAR}
 ###### Uncomment below when you're ready to add the final notebook container to your docker compose
   streamlit:
@@ -21,9 +21,8 @@ services:
       dockerfile: ./Dockerfile.streamlit
 ##      args:
 ##        ARG: <ARG>
-    image: ift6758/streamlit:0.0.1
-    ports:
-      - "8892:8892"
+    image: ift6758/streamlit:1.0.0
     environment:
-      SERVING_IP: "serving"
-      SERVING_PORT: 8890
+      - APP=serving
+    ports:
+      - 5005:5005
