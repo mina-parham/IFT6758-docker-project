@@ -25,9 +25,9 @@ ADD ./streamlit ./streamlit
 # Run a shell command (tip: chain shell commands with && rather than multiple RUN commands)
 # https://docs.docker.com/engine/reference/builder/#run
 #
-RUN pip install wheel
-COPY streamlit/requirements.txt .
-RUN pip install - r streamlit/requirements.txt
+# RUN pip install wheel
+# COPY streamlit/requirements.txt .
+# RUN pip install -r requirements.txt
 
 # Add application
 ADD ./streamlit/streamlit_app.py ./streamlit_app.py

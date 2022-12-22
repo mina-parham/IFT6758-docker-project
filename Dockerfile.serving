@@ -64,4 +64,8 @@ EXPOSE ${SERVING_PORT}
 
 # TODO: specify default command - this is not required because you can always specify the command
 # either with the docker run command or in the docker-compose file
-CMD gunicorn --bind 0.0.0.0:${SERVING_PORT} app:app
+#CMD gunicorn --bind 0.0.0.0:${SERVING_PORT} app:app
+
+CMD ["gunicorn"  , "--bind", "127.0.0.1:5000", "app:app"]
+
+CMD [ "python3", "app.py"]
