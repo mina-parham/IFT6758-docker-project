@@ -20,7 +20,7 @@ WORKDIR /code
 # Add a file or directory
 # https://docs.docker.com/engine/reference/builder/#add
 #
-#       ADD ./<SOURCE_DIR/FILE> ./<DOCKER_DIR/FILE>
+ADD ./serving ./serving
 #
 # Run a shell command (tip: chain shell commands with && rather than multiple RUN commands)
 # https://docs.docker.com/engine/reference/builder/#run
@@ -48,16 +48,20 @@ WORKDIR /code
 COPY . /code
 
 # TODO: install libs
-COPY ift6758/requirement.txt .
-RUN pip install -r requirement.txt
+COPY ift6758/requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install wheel
+RUN pip install -r requirements.txt
 
 COPY ift6758 .
 RUN pip install -e ift6758
 
+ADD ./serving/app.py ./app.py
 
 # TODO: expose ports (or do this in docker-compose)
-EXPOSE 5000
+ENV SERVING_PORT=5000
+EXPOSE ${SERVING_PORT}
 
 # TODO: specify default command - this is not required because you can always specify the command
 # either with the docker run command or in the docker-compose file
-CMD["flask", "run", "--host", "127.0.0.1"]
+CMD gunicorn --bind 0.0.0.0:${SERVING_PORT} app:app
