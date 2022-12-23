@@ -12,7 +12,7 @@ services:
     environment:
       COMET_API_KEY: ${COMET_API_KEY}
     ports:
-      - 5000:5000
+      - 5500:5500
       #DOCKER_ENV_VAR = ${LOCAL_ENV_VAR}
 ###### Uncomment below when you're ready to add the final notebook container to your docker compose
   streamlit:

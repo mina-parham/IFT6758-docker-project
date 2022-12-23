@@ -11,7 +11,7 @@ APP = os.environ.get("APP")
 
 class ServingClient:
     #def __init__(self, ip: str = "0.0.0.0", port: int = 5000, features=None):
-    def __init__(self, ip_address: str = APP, port: int = 5000, features=None):
+    def __init__(self, ip_address: str = APP, port: int = 5500, features=None):
         self.base_url = f"http://{ip_address}:{port}"
         logger.info(f"Initializing client; base URL: {self.base_url}")
 

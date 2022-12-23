@@ -62,7 +62,7 @@ RUN pip install -e ift6758
 
 # TODO: expose ports (or do this in docker-compose)
 ENTRYPOINT [ "gunicorn" ]
-EXPOSE 5000
+EXPOSE 5500
 
 # TODO: specify default command - this is not required because you can always specify the command
 # either with the docker run command or in the docker-compose file
@@ -70,6 +70,6 @@ EXPOSE 5000
 
 #CMD ["gunicorn"  , "--bind", "127.0.0.1:5000", "app:app"]
 
-CMD [ "--bind", "0.0.0.0:5000", "app:app" ]
+CMD [ "--bind", "0.0.0.0:5500", "app:app" ]
 
 #CMD [ "python3", "app.py"]
