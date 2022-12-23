@@ -159,14 +159,6 @@ def predict():
         elif model_name == 'model_5_3.pickle':
             feature = ['coordinate_x', 'coordinate_y', 'distance', 'angle', 'last_coord_x',
         'last_coord_y', 'time_from_last', 'from_last_distance']
-
-        elif model_name =='lr2_pkl.pickle':
-            feature = ['angle']
-        elif model_name == 'lr1_pkl.pickle':
-            feature = ['distance']
-        elif model_name == 'lr3_pkl.pickle':
-            feature ==['angle', 'distance']
-
     except:
         app.logger.info(f"The feature not defined for model:{model_name}")
 
